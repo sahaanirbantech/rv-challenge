@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-env
+  namespace: helloworld
+  labels:
+    app: postgres
+data:
+  POSTGRES_DB: helloworld
+  POSTGRES_USER: hellouser
+  POSTGRES_PASSWORD: h3110w0r1d
+  POSTGRES_HOST: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: postgres
+  name: postgres
+  namespace: helloworld
+spec:
+  clusterIP: None
+  ports:
+    - port: 5432
+  selector:
+    app: postgres
+---
+apiVersion: "apps/v1beta1"
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: helloworld
+spec:
+  serviceName: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:9
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-env
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 50Gi

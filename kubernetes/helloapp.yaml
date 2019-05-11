@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helloapp
+  name: helloapp
+  namespace: helloworld
+spec:
+  clusterIP: None
+  ports:
+    - port: 8000
+  selector:
+    app: helloapp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloapp
+  namespace: helloworld
+spec:
+  selector:
+    matchLabels:
+      app: helloapp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: helloapp
+    spec:
+      containers:
+      - name: helloapp
+        image: sahaanirban/helloworld:latest
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8000
+            name: django
+        envFrom:
+          - configMapRef:
+              name: postgres-env
+        readinessProbe:
+          tcpSocket:
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket:
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          failureThreshold: 2

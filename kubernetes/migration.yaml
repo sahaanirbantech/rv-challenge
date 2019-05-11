@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migration
+  namespace: helloworld
+spec:
+  template:
+    metadata:
+      name: migration
+    spec:
+      containers:
+      - name: migration
+        image: sahaanirban/helloworld:latest
+        imagePullPolicy: Always
+        envFrom:
+          - configMapRef:
+              name: postgres-env
+        command: [ "/bin/sh", "-c", "python manage.py makemigrations && python manage.py migrate" ]
+      restartPolicy: Never
